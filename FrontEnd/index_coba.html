@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- Your HTML content goes here -->
+    <div class="container">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <div class="settings-tray">
+                    <span class="chats-logo">Chats ♥</span>
+                    <span class="settings-tray--right float-end">
+                        <i class="material-icons">menu</i>
+                    </span>
+                </div>
+                <div id="search-box">
+                    <div class="input-wrapper">
+                        <i class="material-icons">search</i>
+                        <input type="text" placeholder="Cari kontaknya <3">
+                    </div>
+                </div>
+                <div id="friend-list">
+                        <!-- Friend rows will be appended here dynamically -->
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="chat-panel-container">
+                    <div class="chat-panel">
+                        <!-- Chat messages will be appended here dynamically -->
+                    </div>
+                    
+                    <div class="reply-box" id="reply-box">
+                        <form id="message-form" enctype="multipart/form-data">
+                            <div class="input-group">
+                                <input type="text" name="body" class="form-control" placeholder="Type a message..." required>
+                                <input type="hidden" name="currentContact" value="${currentContact}">
+                                <input type="hidden" name="myContact" value="${myContact}">
+                                <input type="file" name="file" class="form-control-file" accept="image/*,video/*,.pdf,.docx,.txt" id="file-upload">
+                                <button class="send-button btn btn-primary" type="submit">Send</button>
+                            </div>
+                        </form>
+                        <!-- File preview will appear here -->
+                        <div class="file-preview"></div> <!-- File preview will go here -->
+                        <textarea id="message-input" placeholder="Type a message"></textarea>
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File Preview Modal -->
+    <div id="fileModal" class="file-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>File Preview</h2>
+            <div id="filePreview"></div>
+            <button id="sendFileButton" onclick="sendFile()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Open Modal
+        function openModal() {
+            document.getElementById('fileModal').style.display = "block";
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('fileModal').style.display = "none";
+        }
+
+        // Display file preview
+        document.getElementById('file-upload').addEventListener('change', function(event) {
+            const filePreview = document.querySelector('.file-preview');
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Check if the file is an image and display accordingly
+                    if (file.type.startsWith('image/')) {
+                        filePreview.innerHTML = `<img src="${e.target.result}" alt="File preview" width="100" height="100" />`;
+                    } else if (file.type.startsWith('video/')) {
+                        filePreview.innerHTML = `<video width="100" height="100" controls><source src="${e.target.result}" type="${file.type}"></video>`;
+                    } else {
+                        filePreview.innerHTML = `<p>File preview not available for this type.</p>`;
+                    }
+                };
+                reader.readAsDataURL(file);
+
+                // Open the modal to show the preview
+                openModal();
+            } else {
+                filePreview.innerHTML = ''; // Clear preview if no file selected
+            }
+        });
+
+        // Handle Send Button
+        document.getElementById('send-button').addEventListener('click', function () {
+            const message = document.getElementById('message-input').value;
+            if (!message && !document.querySelector('.file-preview img')) {
+                alert('You must enter a message or select a file!');
+            } else {
+                // Logic to send the message or image
+                alert('Message sent successfully!');
+            }
+        });
+
+        // Send File using AJAX
+        function sendFile() {
+            const formData = new FormData();
+            const fileInput = document.getElementById('file-upload');
+            const messageBody = document.querySelector('input[name="body"]').value;
+            const file = fileInput.files[0];
+
+            // Add the file and message to the FormData object
+            formData.append("file", file);
+            formData.append("body", messageBody);
+            formData.append("currentContact", document.querySelector('input[name="currentContact"]').value);
+            formData.append("myContact", document.querySelector('input[name="myContact"]').value);
+
+            // Use AJAX to send the file
+            $.ajax({
+                url: 'http://localhost:3003/post',
+                type: 'POST',
+                data: formData,
+                contentType: false, // Prevent jQuery from setting content type
+                processData: false, // Prevent jQuery from processing the data
+                success: function(response) {
+                    alert("File sent successfully!");
+                    closeModal(); // Close the modal
+                    // Optionally, clear the file input and text field after successful send
+                    document.querySelector('input[name="body"]').value = '';
+                    fileInput.value = '';
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    alert("Error sending file: " + errorThrown);
+                }
+            });
+        }
+    </script>
+
+    <script src="/script_coba.js"></script>
+</body>
+</html>
